@@ -11,7 +11,7 @@ module OpenSRS
   class TimeoutError < ConnectionError; end
 
   class Server
-    attr_accessor :server, :username, :password, :key, :timeout, :open_timeout, :logger
+    attr_accessor :server, :username, :password, :key, :timeout, :open_timeout, :logger, :ssl_verify, :ssl_ciphers
 
     def initialize(options = {})
       @server   = URI.parse(options[:server] || "https://rr-n1-tor.opensrs.net:55443/")
@@ -22,6 +22,8 @@ module OpenSRS
       @open_timeout = options[:open_timeout]
       @logger   = options[:logger]
       @sanitize_request = options[:sanitize_request]
+      @ssl_verify = options[:ssl_verify] || OpenSSL::SSL::VERIFY_NONE
+      @ssl_ciphers = options[:ssl_ciphers]
 
       OpenSRS::SanitizableString.enable_sanitization = @sanitize_request
     end
@@ -72,9 +74,10 @@ module OpenSRS
     def http
       http = Net::HTTP.new(server.host, server.port)
       http.use_ssl = (server.scheme == "https")
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      http.verify_mode = @ssl_verify if @ssl_verify
       http.read_timeout = http.open_timeout = @timeout if @timeout
       http.open_timeout = @open_timeout                if @open_timeout
+      http.ciphers = @ssl_ciphers if @ssl_ciphers
       http
     end
 

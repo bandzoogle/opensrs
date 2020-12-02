@@ -31,6 +31,23 @@ describe OpenSRS::Server do
 
       expect(server.logger).to be(logger)
     end
+
+
+    it 'allows ssl_verify to be set' do
+      server = OpenSRS::Server.new({ :ssl_verify => OpenSSL::SSL::VERIFY_PEER })
+      expect(server.ssl_verify).to eql(OpenSSL::SSL::VERIFY_PEER)
+    end
+
+    it 'defaults ssl_verify' do
+      server = OpenSRS::Server.new()
+      expect(server.ssl_verify).to eql(OpenSSL::SSL::VERIFY_NONE)
+    end
+
+
+    it 'allows ssl_cipher to be set' do
+      server = OpenSRS::Server.new({ :ssl_ciphers => 'DEFAULT:!DH' })
+      expect(server.ssl_ciphers).to eql('DEFAULT:!DH')
+    end
   end
 
   describe ".call" do
