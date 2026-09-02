@@ -48,6 +48,17 @@ describe OpenSRS::Server do
       server = OpenSRS::Server.new({ :ssl_ciphers => 'DEFAULT:!DH' })
       expect(server.ssl_ciphers).to eql('DEFAULT:!DH')
     end
+
+    it 'allows a proxy host and port to be set' do
+      server = OpenSRS::Server.new({ :proxy_host => 'proxy.example.com', :proxy_port => 3128 })
+      expect(server.proxy_host).to eql('proxy.example.com')
+      expect(server.proxy_port).to eql(3128)
+    end
+
+    it 'leaves proxy_host and proxy_port nil if not given' do
+      expect(server.proxy_host).to be_nil
+      expect(server.proxy_port).to be_nil
+    end
   end
 
   describe ".call" do
@@ -112,6 +123,17 @@ describe OpenSRS::Server do
       expect(http).to receive(:read_timeout=).with(90)
 
       server.call( { :some => 'data' } )
+    end
+
+    it 'passes proxy_host and proxy_port through to Net::HTTP.new' do
+      server.proxy_host = 'proxy.example.com'
+      server.proxy_port = 3128
+
+      expect(Net::HTTP).to receive(:new).
+        with(server.server.host, server.server.port, 'proxy.example.com', 3128).
+        and_return(http)
+
+      server.call({ :some => 'data' })
     end
 
     it 'allows overriding of default (Net:HTTP) timeouts' do
